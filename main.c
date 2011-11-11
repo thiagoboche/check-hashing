@@ -2,26 +2,28 @@
 #include <stdlib.h>
 #include <string.h>
 
+FILE* openFile();
+
 int main(void)
 {
 	char *myBuffer, *token;
   const char delimiters[] = "\n";
 
-	FILE *f = openFile();
+	FILE *file = openFile();
 
 	/*Quick way of finding the file size--move the pointer to the end
 	of the file, get the position add one, and then voilá! The file size!
 	You have to add another byte to hold the terminating NULL.*/
-	fseek(f,0,SEEK_END);
-	unsigned long fileSize = ftell(f);
+	fseek(file, 0, SEEK_END);
+	unsigned long fileSize = ftell(file);
 	fileSize += 2;
 
 	
 	//reposition the file pointer to the beginning for reading
-	fseek(f,0,SEEK_SET);
+	fseek(file, 0, SEEK_SET);
 
 	//allocate the pointer
-	myBuffer = (char *)malloc(fileSize * sizeof(char));
+	myBuffer = (char *) malloc(fileSize * sizeof(char));
 	if(myBuffer == NULL)
 	{
 		printf("Out of memory.");
@@ -30,15 +32,16 @@ int main(void)
 
 	//notice that since this is a pointer, no ampersand (&) is used.
 	//fread(myBuffer,sizeof(myBuffer),1,f);
-	fread(myBuffer,fileSize,1,f);
-	fclose(f);
+	fread(myBuffer, fileSize, 1, file);
+	fclose(file);
   
   //spliting the string
   token = strtok(myBuffer, delimiters);
-  while((token = strtok(NULL, delimiters)) != NULL)
+  
+  do
   {
-    
-  }
+    printf("%s\n", token);
+  } while((token = strtok(NULL, delimiters)) != NULL);
 
 	return 0;
 	
