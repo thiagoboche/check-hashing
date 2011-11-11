@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-FILE* openFile();
+FILE* openFile(char* fileName);
 
 int main(void)
 {
 	char *myBuffer, *token;
   const char delimiters[] = "\n";
 
-	FILE *file = openFile();
+	FILE *file = openFile("arq1.dic");
 
 	/*Quick way of finding the file size--move the pointer to the end
 	of the file, get the position add one, and then voilá! The file size!
@@ -47,9 +47,9 @@ int main(void)
 	
 }
 
-FILE* openFile()
+FILE* openFile(char* fileName)
 {
-  FILE* file = fopen("arq1.dic","r");
+  FILE* file = fopen(fileName, "r");
   
 	if(file == NULL)
 	{
