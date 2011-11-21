@@ -4,6 +4,9 @@
 
 FILE* openFile(char* fileName);
 
+int hash (const char* s, unsigned int seed);
+
+
 int main(void)
 {
 	char *myBuffer, *token;
@@ -18,7 +21,6 @@ int main(void)
 	unsigned long fileSize = ftell(file);
 	fileSize += 2;
 
-	
 	//reposition the file pointer to the beginning for reading
 	fseek(file, 0, SEEK_SET);
 
@@ -40,7 +42,7 @@ int main(void)
   
   do
   {
-    printf("%s\n", token);
+    printf("%s -- %d\n", token, hash(token,0));
   } while((token = strtok(NULL, delimiters)) != NULL);
 
 	return 0;
@@ -58,4 +60,19 @@ FILE* openFile(char* fileName)
 	}
   
   return file;
+}
+
+
+int hash (
+    const char* s,
+    unsigned int seed)
+
+{
+    unsigned hash = seed;
+    while (*s)
+    {
+        hash = hash * 101  +  *s++;
+//        printf("hash - %d\n", hash);
+    }
+    return hash % (8000);
 }
