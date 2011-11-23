@@ -14,7 +14,7 @@ int main(void)
 {
   char *myBuffer, *token;
 
-  FILE *dictionary = openFile("arq1.dic", "r");
+  FILE *dictionary = openFile("example/arq1.dic", "r");
 
   myBuffer = readFile(dictionary);
   
@@ -56,7 +56,7 @@ int main(void)
     printf("%d - %d\n", i, hashVector[i]);
   }
   
-  FILE *text = openFile("nome.txt", "r");
+  FILE *text = openFile("example/nome.txt", "r");
 
   myBuffer = readFile(text);
   
@@ -84,7 +84,7 @@ int main(void)
     
   } while((line = strtok(NULL, "\n")) != NULL);
   
-  FILE *error = openFile("nome.err", "w");
+  FILE *error = openFile("example/nome.err", "w");
 
   return 0;
   
