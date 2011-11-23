@@ -4,19 +4,109 @@
 
 #define HASH_VECTOR_SIZE 8009
 
-FILE* openFile(char* fileName);
-
+FILE* openFile(char* fileName, char* type);
 int homeHash(const char* s, unsigned int seed);
 int incrementHash(const char* s, unsigned int seed);
 int storeHash(const char* s, unsigned int seed);
+char* readFile(FILE* file);
 
 int main(void)
 {
   char *myBuffer, *token;
-  const char delimiters[] = "\n";
 
-  FILE *file = openFile("arq1.dic");
+  FILE *dictionary = openFile("arq1.dic", "r");
 
+  myBuffer = readFile(dictionary);
+  
+  //spliting the string
+  token = strtok(myBuffer, "\n");
+  
+  int *hashVector = (int*) malloc(HASH_VECTOR_SIZE * sizeof(int));
+  
+  do
+  {
+    printf("Home %s -- %d\n", token, homeHash(token, 0));
+    int hash = homeHash(token, 0);
+    
+    if(hashVector[hash] == 0)
+    {
+      printf("Store %s -- %d\n", token, storeHash(token, 0));
+      hashVector[hash] = storeHash(token, 0);
+    }
+    else
+    {
+      while(hashVector[hash] != 0)
+      {
+        hash += incrementHash(token, 0);
+        printf("Increment -- %d\n", hash);
+        if(hashVector[hash] == 0)
+        {
+          printf("Store %s -- %d\n", token, storeHash(token, 0));
+          hashVector[hash] = storeHash(token, 0);
+          break;
+        }
+      } 
+    }
+    
+  } while((token = strtok(NULL, "\n")) != NULL);
+  
+  int i;
+  for(i = 0; i < HASH_VECTOR_SIZE; i++)
+  {
+    printf("%d - %d\n", i, hashVector[i]);
+  }
+  
+  FILE *text = openFile("nome.txt", "r");
+
+  myBuffer = readFile(text);
+  
+  //spliting the string
+  char *line = strtok(myBuffer, "\n");
+  int lineCount = 1;
+  
+  do
+  {
+    printf("linha - %s\n", line);
+    char *word = strtok(NULL, " ");
+    
+    int hash = homeHash(word, 0);
+  
+    do
+    {
+      printf("palavra - %s\n", word);
+      if(hashVector[hash] == storeHash(word, 0))
+      {
+        
+      }
+    } while((word = strtok(NULL, " ")) != NULL);
+    
+    lineCount++;
+    
+  } while((line = strtok(NULL, "\n")) != NULL);
+  
+  FILE *error = openFile("nome.err", "w");
+
+  return 0;
+  
+}
+
+FILE* openFile(char* fileName, char* type)
+{
+  FILE* file = fopen(fileName, type);
+  
+  if(file == NULL)
+  {
+    printf("File not found.");
+    exit(-1);
+  }
+  
+  return file;
+}
+
+char* readFile(FILE* file)
+{
+  char *myBuffer;
+  
   /*Quick way of finding the file size--move the pointer to the end
   of the file, get the position add one, and then voilá! The file size!
   You have to add another byte to hold the terminating NULL.*/
@@ -39,56 +129,8 @@ int main(void)
   //fread(myBuffer,sizeof(myBuffer),1,f);
   fread(myBuffer, fileSize, 1, file);
   fclose(file);
-  
-  //spliting the string
-  token = strtok(myBuffer, delimiters);
-  
-  int *hashVector = (int*) malloc(HASH_VECTOR_SIZE * sizeof(int));
-  
-  do
-  {
-    printf("Home %s -- %d\n", token, homeHash(token, 0));
-    int hash = homeHash(token, 0);
-    
-    if(hashVector[hash] == NULL)
-    {
-      printf("Store %s -- %d\n", token, storeHash(token, 0));
-      hashVector[hash] = storeHash(token, 0);
-    }
-    else
-    {
-      while(hashVector[hash] != NULL)
-      {
-        hash += incrementHash(token, 0);
-        printf("Increment -- %d\n", hash);
-        if(hashVector[hash] == NULL)
-        {
-          printf("Store %s -- %d\n", token, storeHash(token, 0));
-          hashVector[hash] = storeHash(token, 0);
-          break;
-        }
-      } 
-    }
-    
-  } while((token = strtok(NULL, delimiters)) != NULL);
-
-  return 0;
-  
+  return myBuffer;
 }
-
-FILE* openFile(char* fileName)
-{
-  FILE* file = fopen(fileName, "r");
-  
-  if(file == NULL)
-  {
-    printf("File not found.");
-    exit(-1);
-  }
-  
-  return file;
-}
-
 
 int homeHash(const char* s, unsigned int seed)
 {
