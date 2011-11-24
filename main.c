@@ -9,54 +9,19 @@ int homeHash(const char* s, unsigned int seed);
 int incrementHash(const char* s, unsigned int seed);
 int storeHash(const char* s, unsigned int seed);
 char* readFile(FILE* file);
+void readDictionary();
+void printHashVector(int *hashVector);
 
 int main(void)
 {
-  char *myBuffer, *token;
-
-  FILE *dictionary = openFile("example/arq1.dic", "r");
-
-  myBuffer = readFile(dictionary);
-  
-  //spliting the string
-  token = strtok(myBuffer, "\n");
-  
   int *hashVector = (int*) malloc(HASH_VECTOR_SIZE * sizeof(int));
+
+  readDictionary();
   
-  do
-  {
-    printf("Home %s -- %d\n", token, homeHash(token, 0));
-    int hash = homeHash(token, 0);
-    
-    if(hashVector[hash] == 0)
-    {
-      printf("Store %s -- %d\n", token, storeHash(token, 0));
-      hashVector[hash] = storeHash(token, 0);
-    }
-    else
-    {
-      while(hashVector[hash] != 0)
-      {
-        hash += incrementHash(token, 0);
-        printf("Increment -- %d\n", hash);
-        if(hashVector[hash] == 0)
-        {
-          printf("Store %s -- %d\n", token, storeHash(token, 0));
-          hashVector[hash] = storeHash(token, 0);
-          break;
-        }
-      } 
-    }
-    
-  } while((token = strtok(NULL, "\n")) != NULL);
-  
-  int i;
-  for(i = 0; i < HASH_VECTOR_SIZE; i++)
-  {
-    printf("%d - %d\n", i, hashVector[i]);
-  }
+  printHashVector(hashVector);
   
   FILE *text = openFile("example/nome.txt", "r");
+  FILE *error = openFile("example/nome.err", "w");
 
   myBuffer = readFile(text);
   
@@ -64,27 +29,53 @@ int main(void)
   char *line = strtok(myBuffer, "\n");
   int lineCount = 1;
   
-  do
+  /*do
   {
-    printf("linha - %s\n", line);
-    char *word = strtok(NULL, " ");
+    //printf("Tamanho - %d\n", (int) strlen(line));
+    //FILE *lineStream = fmemopen(line, strlen(line), "r");
     
-    int hash = homeHash(word, 0);
-  
+    printf("linha - %s\n", line);
+    //char *word = NULL;
+    */
     do
     {
-      printf("palavra - %s\n", word);
-      if(hashVector[hash] == storeHash(word, 0))
+      //fscanf(lineStream, "%s", word);
+      //printf("palavra - %s\n", word);
+      
+      int hash = homeHash(line, 0);
+      
+      if(hashVector[hash] == 0)
       {
-        
+        fprintf(error, "%d - %s\n", lineCount, line);
       }
-    } while((word = strtok(NULL, " ")) != NULL);
+      else if(hashVector[hash] != storeHash(line, 0))
+      {
+        int found = 0;
+        while(hashVector[hash] != 0)
+        {
+          hash += incrementHash(line, 0);
+          printf("Increment -- %d\n", hash);
+          
+          if(hashVector[hash] == storeHash(line, 0))
+          {
+            found = 1;
+            break;
+          }
+          
+          hash += incrementHash(line, 0);
+        }
+        if(!found)
+        {
+          fprintf(error, "%d - %s\n", lineCount, line);
+        }
+      }
+      
+      lineCount++;
+    } while((line = strtok(NULL, "\n")) != NULL);
     
-    lineCount++;
+    //lineCount++;
     
-  } while((line = strtok(NULL, "\n")) != NULL);
-  
-  FILE *error = openFile("example/nome.err", "w");
+  //} while((line = strtok(NULL, "\n")) != NULL);
 
   return 0;
   
@@ -129,6 +120,7 @@ char* readFile(FILE* file)
   //fread(myBuffer,sizeof(myBuffer),1,f);
   fread(myBuffer, fileSize, 1, file);
   fclose(file);
+  
   return myBuffer;
 }
 
@@ -166,4 +158,58 @@ int storeHash (const char* s,unsigned int seed)
   }
   
   return hash % (HASH_VECTOR_SIZE);
+}
+
+void printHashVector(int *hashVector)
+{
+  int i;
+  for(i = 0; i < HASH_VECTOR_SIZE; i++)
+  {
+    printf("%d - %d\n", i, hashVector[i]);
+  }
+}
+
+void readDictionary()
+{
+  char *myBuffer, *token;
+  FILE *dictionary;
+  
+  dictionary = openFile("example/arq1.dic", "r");
+
+  myBuffer = readFile(dictionary);
+  
+  //spliting the string
+  token = strtok(myBuffer, "\n");
+  
+  do
+  {
+    printf("Home %s -- %d\n", token, homeHash(token, 0));
+    int hash = homeHash(token, 0);
+    
+    if(hashVector[hash] == 0)
+    {
+      printf("Store %s -- %d\n", token, storeHash(token, 0));
+      hashVector[hash] = storeHash(token, 0);
+    }
+    else if(hashVector[hash] == storeHash(token, 0))
+    {
+      printf("Reapeated - %s\n", token);
+      continue;
+    }
+    else
+    {
+      while(hashVector[hash] != 0)
+      {
+        hash += incrementHash(token, 0);
+        printf("Increment -- %d\n", hash);
+        if(hashVector[hash] == 0)
+        {
+          printf("Store %s -- %d\n", token, storeHash(token, 0));
+          hashVector[hash] = storeHash(token, 0);
+          break;
+        }
+      } 
+    }
+    
+  } while((token = strtok(NULL, "\n")) != NULL);
 }
