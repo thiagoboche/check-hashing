@@ -1,22 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-#define HASH_VECTOR_SIZE 8009
+#define HASH_VECTOR_SIZE 2003
 
 FILE* openFile(char* fileName, char* type);
 int homeHash(const char* s, unsigned int seed);
 int incrementHash(const char* s, unsigned int seed);
 int storeHash(const char* s, unsigned int seed);
 char* readFile(FILE* file);
-void readDictionary();
+void readDictionary(int *hashVector);
 void printHashVector(int *hashVector);
+int sumCharacters(const char *string);
 
 int main(void)
 {
+  char *myBuffer;
   int *hashVector = (int*) malloc(HASH_VECTOR_SIZE * sizeof(int));
-
-  readDictionary();
+  
+  readDictionary(hashVector);
   
   printHashVector(hashVector);
   
@@ -44,6 +47,7 @@ int main(void)
       
       int hash = homeHash(line, 0);
       
+      printf("%d - %d\n", hash, hashVector[hash]);
       if(hashVector[hash] == 0)
       {
         fprintf(error, "%d - %s\n", lineCount, line);
@@ -53,6 +57,7 @@ int main(void)
         int found = 0;
         while(hashVector[hash] != 0)
         {
+          printf("%d - %d\n", hash, hashVector[hash]);
           hash += incrementHash(line, 0);
           printf("Increment -- %d\n", hash);
           
@@ -126,38 +131,30 @@ char* readFile(FILE* file)
 
 int homeHash(const char* s, unsigned int seed)
 {
-  unsigned hash = seed;
-  
-  while (*s)
-  {
-    hash = hash * 101  +  *s++;
-  }
-  
-  return hash % (HASH_VECTOR_SIZE);
+  return sumCharacters(s) % HASH_VECTOR_SIZE;
 }
 
 int incrementHash(const char* s, unsigned int seed)
 {
-  unsigned hash = seed;
   
-  while (*s)
-  {
-    hash = hash * 103  +  *s++;
-  }
-  
-  return hash % (HASH_VECTOR_SIZE);
+  return abs(sumCharacters(s) / HASH_VECTOR_SIZE) % HASH_VECTOR_SIZE;
 }
 
 int storeHash (const char* s,unsigned int seed)
 {
-  unsigned hash = seed;
-  
-  while (*s)
+  return (sumCharacters(s) % HASH_VECTOR_SIZE - 4) + 1;
+}
+
+int sumCharacters(const char *string)
+{
+  int i = 0, sum = 0;
+  while(string[i] != '\0')
   {
-    hash = hash * 105  +  *s++;
+    sum += string[i];
+    i++;
   }
   
-  return hash % (HASH_VECTOR_SIZE);
+  return abs(sum);
 }
 
 void printHashVector(int *hashVector)
@@ -169,7 +166,7 @@ void printHashVector(int *hashVector)
   }
 }
 
-void readDictionary()
+void readDictionary(int *hashVector)
 {
   char *myBuffer, *token;
   FILE *dictionary;
@@ -183,12 +180,10 @@ void readDictionary()
   
   do
   {
-    printf("Home %s -- %d\n", token, homeHash(token, 0));
     int hash = homeHash(token, 0);
     
     if(hashVector[hash] == 0)
     {
-      printf("Store %s -- %d\n", token, storeHash(token, 0));
       hashVector[hash] = storeHash(token, 0);
     }
     else if(hashVector[hash] == storeHash(token, 0))
@@ -198,18 +193,18 @@ void readDictionary()
     }
     else
     {
+      printf("colision detected \n");
       while(hashVector[hash] != 0)
       {
         hash += incrementHash(token, 0);
-        printf("Increment -- %d\n", hash);
         if(hashVector[hash] == 0)
         {
-          printf("Store %s -- %d\n", token, storeHash(token, 0));
           hashVector[hash] = storeHash(token, 0);
           break;
         }
       } 
     }
     
+    printf("%d -> %d - %s\n", hash, storeHash(token, 0), token);
   } while((token = strtok(NULL, "\n")) != NULL);
 }
